@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="SMOEBAG_TOGGLE" header="SmoeBag">
+    if SmoeBag and SmoeBag.Toggle then SmoeBag.Toggle() end
+  </Binding>
+</Bindings>
