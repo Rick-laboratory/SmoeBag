@@ -152,14 +152,15 @@ function SmoeBag.EnsureSlot(i)
 
     s.rarityOverlay = s:CreateTexture(nil, "OVERLAY", nil, 1)
     s.rarityOverlay:SetAllPoints(s.icon)
-    s.rarityOverlay:SetTexture(1, 1, 1)
+    s.rarityOverlay:SetColorTexture(1, 1, 1)
     s.rarityOverlay:SetAlpha(0)
     s.rarityOverlay:Hide()
 
     local o = CreateFrame("Button", nil, s, "SecureActionButtonTemplate")
     o:SetAllPoints()
     o:EnableMouse(true)
-    o:RegisterForClicks("AnyDown")
+    -- Secure actions fire on mouse-up in current clients; custom logic runs on down only.
+    o:RegisterForClicks("AnyDown", "AnyUp")
     o:RegisterForDrag("LeftButton")
     o:SetFrameLevel(s:GetFrameLevel() + 50)
     o._slot = s
@@ -179,7 +180,8 @@ function SmoeBag.EnsureSlot(i)
     end)
     o:SetScript("OnLeave", GameTooltip_Hide)
 
-    o:SetScript("PreClick", function(self, btn)
+    o:SetScript("PreClick", function(self, btn, down)
+        if not down then return end
         local sl = self._slot
         if not sl then return end
         if btn == "LeftButton" then
@@ -303,7 +305,7 @@ function SmoeBag.UpdateSlotFrame(i)
     local isQuest = false
 
     if link then
-        local _, _, q, _, _, itemType = GetItemInfo(link)
+        local _, _, q, _, _, itemType = SmoeBag.GetItemInfo(link)
         if q then quality = q end
         -- Simple quest detection: itemType is usually "Quest" on EN clients
         if itemType == "Quest" then
@@ -353,7 +355,7 @@ function SmoeBag.UpdateSlotFrame(i)
         s._itemInfo = nil
     end
     if link and not s._itemInfo then
-        local name, _, _, _, _, itemType, subType = GetItemInfo(link)
+        local name, _, _, _, _, itemType, subType = SmoeBag.GetItemInfo(link)
         if name then
             s._itemInfo = { name = name, itemType = itemType, subType = subType }
         end

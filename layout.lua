@@ -31,7 +31,7 @@ function SmoeBag.SetLayoutDirty(value)
 end
 
 function SmoeBag.MakeLayoutKey()
-    local max = NUM_BAG_SLOTS or 4
+    local max = SmoeBag.GetLastBagIndex()
     local parts = {}
     parts[#parts + 1] = "cols:" .. tostring(SmoeBag.userCols)
     parts[#parts + 1] = "max:" .. tostring(max)
@@ -78,7 +78,7 @@ function SmoeBag.RebuildLayoutIfNeeded(force)
     wipe(bagStart)
 
     local total = 0
-    local max = NUM_BAG_SLOTS or 4
+    local max = SmoeBag.GetLastBagIndex()
 
     for bag = 0, max do
         local n = SmoeBag.GetNumSlots(bag)

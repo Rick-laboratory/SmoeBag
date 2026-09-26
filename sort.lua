@@ -159,7 +159,7 @@ local function GetPriorityFromLink(link, id)
     end
 
     if not name then
-        local n, _, _, _, _, it, st, _, _, _, _, cID, scID = GetItemInfo(link)
+        local n, _, _, _, _, it, st, _, _, _, _, cID, scID = SmoeBag.GetItemInfo(link)
         name = n or name
         itemType = it or itemType
         subType = st or subType
@@ -167,8 +167,8 @@ local function GetPriorityFromLink(link, id)
         subclassID = scID or subclassID
     end
 
-    if (classID == nil or subclassID == nil) and GetItemInfoInstant then
-        local iid, _, _, _, _, cID, scID = GetItemInfoInstant(link)
+    if classID == nil or subclassID == nil then
+        local iid, _, _, _, _, cID, scID = SmoeBag.GetItemInfoInstant(link)
         id = id or iid
         classID = classID or cID
         subclassID = subclassID or scID
@@ -232,7 +232,7 @@ GetItemInfoCached = function(link)
     end
     
     -- Call API and cache result (even if nil)
-    local name, link2, quality, itemLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, sellPrice, classID, subclassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(link)
+    local name, link2, quality, itemLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, sellPrice, classID, subclassID, bindType, expacID, setID, isCraftingReagent = SmoeBag.GetItemInfo(link)
     
     local info = nil
     if name then -- Only cache if we got valid data
@@ -293,8 +293,7 @@ local function DoSplit(srcBag, srcSlot, amount, dstBag, dstSlot)
     if amount <= 0 then return true end
     if SmoeBag.CursorHasSomething() then return false end
     if SmoeBag.IsLocked(srcBag, srcSlot) then return false end
-    if not SplitContainerItem then return false end
-    SplitContainerItem(srcBag, srcSlot, amount)
+    if not SmoeBag.SplitSlot(srcBag, srcSlot, amount) then return false end
     if not SmoeBag.CursorHasSomething() then 
         SmoeBag.CursorClearSafe() 
         return false 
@@ -500,7 +499,7 @@ local function BuildStackQueueOnly()
                     else
                         -- GetItemInfo failed or not cached yet - use defaults
                         -- Try direct call as fallback (might work on second pass)
-                        local name, _, _, _, _, _, _, ms = GetItemInfo(link)
+                        local name, _, _, _, _, _, _, ms = SmoeBag.GetItemInfo(link)
                         if name then
                             maxStack = ms or 1
                         end

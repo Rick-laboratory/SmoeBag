@@ -57,6 +57,44 @@ function SmoeBag.GetItemInfoSafe(bag, slot)
     end
 end
 
+-- --- Item API (C_Item vs removed globals) ---
+function SmoeBag.GetItemInfo(item)
+    if not item then return end
+    if C_Item and C_Item.GetItemInfo then
+        return C_Item.GetItemInfo(item)
+    end
+    if GetItemInfo then
+        return GetItemInfo(item)
+    end
+end
+
+function SmoeBag.GetItemInfoInstant(item)
+    if not item then return end
+    if C_Item and C_Item.GetItemInfoInstant then
+        return C_Item.GetItemInfoInstant(item)
+    end
+    if GetItemInfoInstant then
+        return GetItemInfoInstant(item)
+    end
+end
+
+function SmoeBag.SplitSlot(bag, slot, amount)
+    if C_Container and C_Container.SplitContainerItem then
+        C_Container.SplitContainerItem(bag, slot, amount)
+        return true
+    end
+    if SplitContainerItem then
+        SplitContainerItem(bag, slot, amount)
+        return true
+    end
+    return false
+end
+
+-- Highest bag index shown in the window (includes the retail reagent bag).
+function SmoeBag.GetLastBagIndex()
+    return NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4
+end
+
 function SmoeBag.ItemIDFromLink(link)
     if not link then return end
     local id = link:match("item:(%d+)")
@@ -65,10 +103,11 @@ end
 
 function SmoeBag.IsEquippableLink(link)
     if not link then return false end
-    if IsEquippableItem and IsEquippableItem(link) then
+    local isEquippable = (C_Item and C_Item.IsEquippableItem) or IsEquippableItem
+    if isEquippable and isEquippable(link) then
         return true
     end
-    local _, _, _, _, _, _, _, _, equipLoc = GetItemInfo(link)
+    local _, _, _, _, _, _, _, _, equipLoc = SmoeBag.GetItemInfo(link)
     return equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_BAG" or false
 end
 

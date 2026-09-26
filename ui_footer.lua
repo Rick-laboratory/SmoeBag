@@ -66,7 +66,9 @@ function SmoeBag.UpdateFooter()
     moneyFS:SetText(SmoeBag.FormatMoneyInline(m))
     local honor = 0
     if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
-        local info = C_CurrencyInfo.GetCurrencyInfo(1901)  -- Honor Points ID in TBC Classic
+        -- Retail uses the modern honor currency; Classic flavors use Classic honor.
+        local isRetail = WOW_PROJECT_ID and WOW_PROJECT_MAINLINE and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+        local info = C_CurrencyInfo.GetCurrencyInfo(isRetail and 1792 or 1901)
         honor = info and info.quantity or 0
     end
     honorFS:SetText(SmoeBag.FormatHonorInline(honor))

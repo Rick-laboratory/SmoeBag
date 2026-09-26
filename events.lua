@@ -121,7 +121,7 @@ SmoeBag.frame:SetScript("OnEvent", function(_, event, ...)
         SmoeBag.UpdateAll()
         SmoeBag.InstallOverrides()
         SmoeBag.SetBagBarChecked(false)
-        SmoeBag.Print("v0.62 loaded - /smoebagconfig or /smoebag config")
+        SmoeBag.Print("v0.63 loaded - /smoebagconfig or /smoebag config")
         return
     end
 

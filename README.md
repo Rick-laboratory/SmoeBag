@@ -27,7 +27,8 @@ It is designed to stay responsive during normal gameplay while keeping item mana
 1. Download or clone this repository.
 2. Place the folder in your WoW addons directory:
    - `_classic_era_/Interface/AddOns/`
-   - `_classic_/Interface/AddOns/`
+   - `_classic_/Interface/AddOns/` (MoP Classic)
+   - `_anniversary_/Interface/AddOns/` (TBC Anniversary)
    - `_retail_/Interface/AddOns/`
 3. Ensure the final path looks like:
    - `.../AddOns/SmoeBag/SmoeBag.toc`

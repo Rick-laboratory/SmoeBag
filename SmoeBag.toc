@@ -1,8 +1,8 @@
-## Interface: 50503, 11508, 20505, 120001
+## Interface: 120100, 50504, 20506, 11509
 ## Title: SmoeBag
 ## Notes: One Bag Addon similar to Bagnone but Developed by myself
 ## Author: Rick Armbruster aka Smoebody
-## Version: 0.62
+## Version: 0.63
 ## SavedVariables: SmoeBagDB
 ## Load order: config -> saved_variables -> helpers -> ui_frame -> ui_search -> ui_footer -> bagbar -> main (creates grid refs) -> slots -> layout -> sort -> resize -> events -> config_ui
 
