@@ -17,8 +17,8 @@ function SmoeBag.SetBagBarChecked(on)
     }
     for _, name in ipairs(btns) do
         local b = _G[name]
-        if b and b.SetChecked then 
-            b:SetChecked(on and true or false) 
+        if b and b.SetChecked then
+            b:SetChecked(on and true or false)
         end
     end
 end

@@ -6,16 +6,16 @@
 
 SmoeBag = SmoeBag or {}
 
-local MIN_COLS = 4
-local MAX_COLS = 20
-local MIN_SLOT = 20
-local MAX_SLOT = 100
+local MIN_COLS = SmoeBag.SETTINGS.minCols
+local MAX_COLS = SmoeBag.SETTINGS.maxCols
+local MIN_SLOT = SmoeBag.SETTINGS.minSlot
+local MAX_SLOT = SmoeBag.SETTINGS.maxSlot
 local SLOT_STEP = 1
-local MIN_GAP = -2
-local MAX_GAP = 8
+local MIN_GAP = SmoeBag.SETTINGS.minGap
+local MAX_GAP = SmoeBag.SETTINGS.maxGap
 local GAP_STEP = 0.25
-local DEFAULT_SLOT = 44
-local DEFAULT_GAP = 1
+local DEFAULT_SLOT = SmoeBag.SETTINGS.defaultSlot
+local DEFAULT_GAP = SmoeBag.SETTINGS.defaultGap
 
 local backupCols, backupSlotSize, backupGap
 local cfg
@@ -213,7 +213,6 @@ end
 
 -- Slash command
 SLASH_SMOEBAGCONFIG1 = "/smoebagconfig"
-SLASH_SMOEBAGCONFIG2 = "/smoebag config"
 SlashCmdList["SMOEBAGCONFIG"] = function()
     SmoeBag.OpenConfig()
 end

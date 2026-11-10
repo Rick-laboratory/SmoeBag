@@ -16,25 +16,8 @@ local old_OpenAllBags = nil
 local old_CloseAllBags = nil
 local overridesInstalled = false
 
-local function ApplySavedLayoutSettings()
-    -- Re-apply persisted layout settings so defaults from modules cannot
-    -- overwrite user settings during startup.
-    SmoeBag.userCols = tonumber(SmoeBagDB.cols) or SmoeBag.COLS
-
-    local slotSize = tonumber(SmoeBagDB.slotSize)
-    if slotSize then
-        SmoeBag.SLOT_W = slotSize
-        SmoeBag.SLOT_H = slotSize
-    end
-
-    local gap = tonumber(SmoeBagDB.gap)
-    if gap ~= nil then
-        SmoeBag.GAP = gap
-    end
-end
-
--- Apply once at file load and again at PLAYER_LOGIN.
-ApplySavedLayoutSettings()
+-- Modules can set defaults during load; normalize persisted values again at login.
+SmoeBag.ApplySavedSettings()
 
 function SmoeBag.Show()
     if FORCE_CLOSE_BLIZZ_BAGS and old_CloseAllBags then
@@ -57,10 +40,10 @@ function SmoeBag.Hide()
 end
 
 function SmoeBag.Toggle()
-    if SmoeBag.frame:IsShown() then 
-        SmoeBag.Hide() 
-    else 
-        SmoeBag.Show() 
+    if SmoeBag.frame:IsShown() then
+        SmoeBag.Hide()
+    else
+        SmoeBag.Show()
     end
 end
 
@@ -110,7 +93,7 @@ SmoeBag.frame:RegisterEvent("PLAYER_LOGOUT")
 
 SmoeBag.frame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
-        ApplySavedLayoutSettings()
+        SmoeBag.ApplySavedSettings()
         SmoeBag.playerFaction = UnitFactionGroup("player")
         SmoeBag.frame:ClearAllPoints()
         SmoeBag.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", SmoeBagDB.posX, SmoeBagDB.posY)
@@ -126,15 +109,15 @@ SmoeBag.frame:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "PLAYER_MONEY" then
-        if SmoeBag.frame:IsShown() then 
-            SmoeBag.UpdateFooter() 
+        if SmoeBag.frame:IsShown() then
+            SmoeBag.UpdateFooter()
         end
         return
     end
 
     if event == "CURRENCY_DISPLAY_UPDATE" then
-        if SmoeBag.frame:IsShown() then 
-            SmoeBag.UpdateFooter() 
+        if SmoeBag.frame:IsShown() then
+            SmoeBag.UpdateFooter()
         end
         return
     end
@@ -161,8 +144,8 @@ SmoeBag.frame:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "PLAYER_STARTED_MOVING" then
-        if SmoeBag.IsSearchFocused() then 
-            SmoeBag.searchBox:ClearFocus() 
+        if SmoeBag.IsSearchFocused() then
+            SmoeBag.searchBox:ClearFocus()
         end
         return
     end

@@ -263,13 +263,13 @@ end
 
 function SmoeBag.ApplySearchFilter(s, itemInfo)
     local searchText = SmoeBag.GetSearchText()
-    if searchText == "" then 
-        s:SetAlpha(1) 
-        return 
+    if searchText == "" then
+        s:SetAlpha(1)
+        return
     end
-    if not itemInfo or not itemInfo.name then 
-        s:SetAlpha(SmoeBag.SEARCH_DIM_ALPHA or 0.18) 
-        return 
+    if not itemInfo or not itemInfo.name then
+        s:SetAlpha(SmoeBag.SEARCH_DIM_ALPHA or 0.18)
+        return
     end
     local name = itemInfo.name:lower()
     local itemType = (itemInfo.itemType or ""):lower()
@@ -284,7 +284,7 @@ end
 function SmoeBag.UpdateSlotFrame(i)
     local layout = SmoeBag.layout
     if not layout then return end
-    
+
     local s = slots[i]
     local e = layout[i]
     if not s or not e then return end
@@ -339,11 +339,11 @@ function SmoeBag.UpdateSlotFrame(i)
         end
     end
 
-    if icon then 
-        s.icon:SetTexture(icon) 
-        s.icon:Show() 
-    else 
-        s.icon:Hide() 
+    if icon then
+        s.icon:SetTexture(icon)
+        s.icon:Show()
+    else
+        s.icon:Hide()
     end
     s.count:SetText(count > 1 and count or "")
     SmoeBag.SetSecureUse(s, itemID)

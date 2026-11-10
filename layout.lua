@@ -8,8 +8,8 @@
 
 SmoeBag = SmoeBag or {}
 
-local MIN_COLS = 4
-local MAX_COLS = 20
+local MIN_COLS = SmoeBag.SETTINGS.minCols
+local MAX_COLS = SmoeBag.SETTINGS.maxCols
 local MIN_ROWS = 2
 
 local layout = {}
@@ -159,8 +159,8 @@ function SmoeBag.RebuildLayoutIfNeeded(force)
 end
 
 function SmoeBag.UpdateAll()
-    for i = 1, #layout do 
-        SmoeBag.UpdateSlotFrame(i) 
+    for i = 1, #layout do
+        SmoeBag.UpdateSlotFrame(i)
     end
     if SmoeBag.UpdateFooter then
         SmoeBag.UpdateFooter()
@@ -168,22 +168,22 @@ function SmoeBag.UpdateAll()
 end
 
 function SmoeBag.UpdateBag(bag)
-    if not bagStart[bag] then 
+    if not bagStart[bag] then
         if SmoeBag.MarkDirtyAll then
             SmoeBag.MarkDirtyAll()
         end
-        return 
+        return
     end
     local start = bagStart[bag]
     local n = SmoeBag.GetNumSlots(bag)
-    if (bagSlots[bag] or 0) ~= n then 
+    if (bagSlots[bag] or 0) ~= n then
         layoutDirty = true
         if SmoeBag.MarkDirtyAll then
             SmoeBag.MarkDirtyAll()
         end
-        return 
+        return
     end
-    for slot = 1, n do 
-        SmoeBag.UpdateSlotFrame(start + (slot - 1)) 
+    for slot = 1, n do
+        SmoeBag.UpdateSlotFrame(start + (slot - 1))
     end
 end

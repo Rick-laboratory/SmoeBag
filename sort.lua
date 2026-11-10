@@ -183,6 +183,8 @@ local CLEAN_STEP_DT = TURBO_MODE and 0.005 or 0.01
 local CLEAN_MAX_OPS_PER_TICK = TURBO_MODE and 5 or 3
 
 local CLEAN_MAX_FAILS_PER_JOB = 50
+local CLEAN_MAX_ACTIVE_SECONDS = 30
+local cleanElapsed = 0
 local CLEAN_W = 52
 local CLEAN_H = 22
 
@@ -225,15 +227,15 @@ GetItemInfoCached = function(link)
     if not link then return nil end
     local id = SmoeBag.ItemIDFromLink(link)
     if not id then return nil end
-    
+
     -- Check cache first
     if itemInfoCache[id] then
         return itemInfoCache[id]
     end
-    
+
     -- Call API and cache result (even if nil)
     local name, link2, quality, itemLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, sellPrice, classID, subclassID, bindType, expacID, setID, isCraftingReagent = GetItemInfo(link)
-    
+
     local info = nil
     if name then -- Only cache if we got valid data
         info = {
@@ -256,7 +258,7 @@ GetItemInfoCached = function(link)
             isCraftingReagent = isCraftingReagent
         }
     end
-    
+
     itemInfoCache[id] = info
     return info
 end
@@ -274,17 +276,17 @@ end
 
 local function DoMove(srcBag, srcSlot, dstBag, dstSlot)
     if SmoeBag.CursorHasSomething() then return false end
-    if SmoeBag.IsLocked(srcBag, srcSlot) then return false end
+    if SmoeBag.IsLocked(srcBag, srcSlot) or SmoeBag.IsLocked(dstBag, dstSlot) then return false end
     SmoeBag.PickupSlot(srcBag, srcSlot)
-    if not SmoeBag.CursorHasSomething() then 
-        SmoeBag.CursorClearSafe() 
-        return false 
+    if not SmoeBag.CursorHasSomething() then
+        SmoeBag.CursorClearSafe()
+        return false
     end
     SmoeBag.PickupSlot(dstBag, dstSlot)
-    if SmoeBag.CursorHasSomething() then 
-        SmoeBag.PickupSlot(srcBag, srcSlot) 
-        SmoeBag.CursorClearSafe() 
-        return false 
+    if SmoeBag.CursorHasSomething() then
+        SmoeBag.PickupSlot(srcBag, srcSlot)
+        SmoeBag.CursorClearSafe()
+        return false
     end
     return true
 end
@@ -292,17 +294,16 @@ end
 local function DoSplit(srcBag, srcSlot, amount, dstBag, dstSlot)
     if amount <= 0 then return true end
     if SmoeBag.CursorHasSomething() then return false end
-    if SmoeBag.IsLocked(srcBag, srcSlot) then return false end
-    if not SplitContainerItem then return false end
-    SplitContainerItem(srcBag, srcSlot, amount)
-    if not SmoeBag.CursorHasSomething() then 
-        SmoeBag.CursorClearSafe() 
-        return false 
+    if SmoeBag.IsLocked(srcBag, srcSlot) or SmoeBag.IsLocked(dstBag, dstSlot) then return false end
+    if not SmoeBag.SplitSlot(srcBag, srcSlot, amount) then return false end
+    if not SmoeBag.CursorHasSomething() then
+        SmoeBag.CursorClearSafe()
+        return false
     end
     SmoeBag.PickupSlot(dstBag, dstSlot)
-    if SmoeBag.CursorHasSomething() then 
-        SmoeBag.CursorClearSafe() 
-        return false 
+    if SmoeBag.CursorHasSomething() then
+        SmoeBag.CursorClearSafe()
+        return false
     end
     return true
 end
@@ -639,29 +640,30 @@ local function BuildStackQueueOnly()
 end
 
 function SmoeBag.CleanStart()
-    if InCombatLockdown and InCombatLockdown() then 
-        SmoeBag.Print("Can't sort in combat.") 
-        return 
+    if InCombatLockdown and InCombatLockdown() then
+        SmoeBag.Print("Can't sort in combat.")
+        return
     end
     local t = GetTime and GetTime() or 0
     if t - lastClean < CLEAN_THROTTLE then return end
     lastClean = t
-    if cleaning then 
-        SmoeBag.Print("Sort already running.") 
-        return 
+    if cleaning then
+        SmoeBag.Print("Sort already running.")
+        return
     end
 
     -- Clear cache at start of new sort pass
     wipe(itemInfoCache)
-    
+
     SmoeBag.CursorClearSafe()
     BuildStackQueueOnly()
 
     cleaning = true
+    cleanElapsed = 0
     cleanStepTimer = 0
     -- After stacking, we move to defrag which processes the move queue
     cleanPhase = (#cleanQueue > 0) and "stack" or "defrag"
-    
+
     -- Update button state
     UpdateSortButtonState()
 end
@@ -669,6 +671,17 @@ end
 function SmoeBag.CleanOnUpdate(dt)
     if not cleaning then return end
     if SmoeBag.GetSuspendUpdates() then return end
+    cleanElapsed = cleanElapsed + dt
+    if cleanElapsed >= CLEAN_MAX_ACTIVE_SECONDS then
+        cleaning = false
+        cleanPhase = "idle"
+        wipe(cleanQueue)
+        wipe(itemInfoCache)
+        SmoeBag.CursorClearSafe()
+        UpdateSortButtonState()
+        SmoeBag.Print("Sort stopped after 30 seconds. Check locked items or restricted bag types.")
+        return
+    end
     if InCombatLockdown and InCombatLockdown() then
         cleaning = false
         cleanPhase = "idle"
@@ -679,9 +692,9 @@ function SmoeBag.CleanOnUpdate(dt)
         SmoeBag.Print("Sort paused in combat.")
         return
     end
-    if SmoeBag.CursorHasSomething() then 
-        SmoeBag.CursorClearSafe() 
-        return 
+    if SmoeBag.CursorHasSomething() then
+        SmoeBag.CursorClearSafe()
+        return
     end
 
     cleanStepTimer = cleanStepTimer + dt
@@ -694,32 +707,32 @@ function SmoeBag.CleanOnUpdate(dt)
 
         if cleanPhase == "stack" then
             local job = cleanQueue[1]
-            if not job then 
+            if not job then
                 -- Stacking done, rebuild move queue with current positions
                 BuildMoveQueue()
-                cleanPhase = "defrag" 
-                if SmoeBag.MarkDirtyAll then 
-                    SmoeBag.MarkDirtyAll() 
-                end 
+                cleanPhase = "defrag"
+                if SmoeBag.MarkDirtyAll then
+                    SmoeBag.MarkDirtyAll()
+                end
                 break
             end
             local ok = false
-            if job.op == "split" then 
-                ok = DoSplit(job.sb, job.ss, job.amt, job.db, job.ds) 
+            if job.op == "split" then
+                ok = DoSplit(job.sb, job.ss, job.amt, job.db, job.ds)
             end
-            if ok then 
-                table.remove(cleanQueue, 1) 
-                if SmoeBag.MarkDirtyAll then 
-                    SmoeBag.MarkDirtyAll() 
-                end 
+            if ok then
+                table.remove(cleanQueue, 1)
+                if SmoeBag.MarkDirtyAll then
+                    SmoeBag.MarkDirtyAll()
+                end
             else
                 job.fail = (job.fail or 0) + 1
-                if job.fail >= CLEAN_MAX_FAILS_PER_JOB then 
-                    table.remove(cleanQueue, 1) 
-                    SmoeBag.CursorClearSafe() 
-                    if SmoeBag.MarkDirtyAll then 
-                        SmoeBag.MarkDirtyAll() 
-                    end 
+                if job.fail >= CLEAN_MAX_FAILS_PER_JOB then
+                    table.remove(cleanQueue, 1)
+                    SmoeBag.CursorClearSafe()
+                    if SmoeBag.MarkDirtyAll then
+                        SmoeBag.MarkDirtyAll()
+                    end
                 end
             end
             -- Continue to next iteration
@@ -727,30 +740,30 @@ function SmoeBag.CleanOnUpdate(dt)
         elseif cleanPhase == "defrag" then
             -- Process move queue: place items in their correct positions one by one
             local job = cleanQueue[1]
-            if not job then 
+            if not job then
                 -- Move queue empty, check if everything is sorted correctly
                 if CheckIfSorted() then
                     -- Everything is sorted! We're done.
-                    cleaning = false 
+                    cleaning = false
                     cleanPhase = "idle"
                     wipe(itemInfoCache) -- Clear cache when done
                     UpdateSortButtonState()
-                    if SmoeBag.MarkDirtyAll then 
-                        SmoeBag.MarkDirtyAll() 
-                    end 
+                    if SmoeBag.MarkDirtyAll then
+                        SmoeBag.MarkDirtyAll()
+                    end
                     break
                 else
                     -- Not fully sorted yet, rebuild move queue and continue
                     BuildMoveQueue()
                     if #cleanQueue == 0 then
                         -- No moves needed (shouldn't happen if CheckIfSorted returned false, but be safe)
-                        cleaning = false 
+                        cleaning = false
                         cleanPhase = "idle"
                         wipe(itemInfoCache) -- Clear cache when done
                         UpdateSortButtonState()
-                        if SmoeBag.MarkDirtyAll then 
-                            SmoeBag.MarkDirtyAll() 
-                        end 
+                        if SmoeBag.MarkDirtyAll then
+                            SmoeBag.MarkDirtyAll()
+                        end
                         break
                     end
                     -- Continue processing the new move queue.
@@ -767,40 +780,40 @@ function SmoeBag.CleanOnUpdate(dt)
                 local sourceLink = SmoeBag.GetItemLinkSafe(job.sb, job.ss)
                 local sourceId = sourceLink and SmoeBag.ItemIDFromLink(sourceLink) or nil
                 local expectedId = job.expectedId
-                
+
                 -- Check if destination already has the right item
                 local destLink = SmoeBag.GetItemLinkSafe(job.db, job.ds)
                 local destId = destLink and SmoeBag.ItemIDFromLink(destLink) or nil
-                
+
                 if expectedId and destId == expectedId then
                     -- Already in place, skip this move
                     table.remove(cleanQueue, 1)
-                    if SmoeBag.MarkDirtyAll then 
-                        SmoeBag.MarkDirtyAll() 
+                    if SmoeBag.MarkDirtyAll then
+                        SmoeBag.MarkDirtyAll()
                     end
                 elseif expectedId and sourceId == expectedId then
                     -- Source has the expected item, safe to move
                     local ok = DoMove(job.sb, job.ss, job.db, job.ds)
                     if ok then
                         table.remove(cleanQueue, 1)
-                        if SmoeBag.MarkDirtyAll then 
-                            SmoeBag.MarkDirtyAll() 
+                        if SmoeBag.MarkDirtyAll then
+                            SmoeBag.MarkDirtyAll()
                         end
                     else
                         job.fail = (job.fail or 0) + 1
                         if job.fail >= CLEAN_MAX_FAILS_PER_JOB then
                             table.remove(cleanQueue, 1)
                             SmoeBag.CursorClearSafe()
-                            if SmoeBag.MarkDirtyAll then 
-                                SmoeBag.MarkDirtyAll() 
+                            if SmoeBag.MarkDirtyAll then
+                                SmoeBag.MarkDirtyAll()
                             end
                         end
                     end
                 else
                     -- Source doesn't have expected item (was moved already), skip this move
                     table.remove(cleanQueue, 1)
-                    if SmoeBag.MarkDirtyAll then 
-                        SmoeBag.MarkDirtyAll() 
+                    if SmoeBag.MarkDirtyAll then
+                        SmoeBag.MarkDirtyAll()
                     end
                 end
             else

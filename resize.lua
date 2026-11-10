@@ -24,7 +24,7 @@ end
 function SmoeBag.LiveResizeFromCursor()
     local layout = SmoeBag.layout
     if not layout then return end
-    
+
     local total = #layout
     if total <= 0 then return end
     if not rz_left or not rz_top then return end
@@ -68,7 +68,7 @@ function SmoeBag.LiveResizeFromCursor()
             g:SetPoint("TOPLEFT", c * ((SmoeBag.SLOT_W or 44) + (SmoeBag.GAP or 1)), -r * ((SmoeBag.SLOT_H or 44) + (SmoeBag.GAP or 1)))
             g:Show()
         end
-        for i = total + 1, #ghosts do 
+        for i = total + 1, #ghosts do
             if ghosts[i] then ghosts[i]:Hide() end
         end
     end
@@ -102,10 +102,10 @@ SmoeBag.resizeBtn = resizeBtn
 
 resizeBtn:SetScript("OnMouseDown", function(self, btn)
     if btn ~= "LeftButton" then return end
-    
+
     resizing = true
     SmoeBag.SetSuspendUpdates(true)
-    
+
     SmoeBag.frame:SetClampedToScreen(false)
     SmoeBag.frame:SetFrameStrata("TOOLTIP")
 
@@ -119,7 +119,7 @@ resizeBtn:SetScript("OnMouseDown", function(self, btn)
     rz_startW = SmoeBag.frame:GetWidth()
     rz_startH = SmoeBag.frame:GetHeight()
 
-    for i = 1, #SmoeBag.slots do 
+    for i = 1, #SmoeBag.slots do
         local s = SmoeBag.slots[i]
         if s then s:Hide() end
     end
@@ -143,8 +143,8 @@ resizeBtn:SetScript("OnMouseUp", function(self, btn)
     rz_startW, rz_startH = nil, nil
 
     local ghosts = SmoeBag.GetGhosts()
-    for i = 1, #ghosts do 
-        if ghosts[i] then ghosts[i]:Hide() end 
+    for i = 1, #ghosts do
+        if ghosts[i] then ghosts[i]:Hide() end
     end
 
     SmoeBag.frame:SetClampedToScreen(true)

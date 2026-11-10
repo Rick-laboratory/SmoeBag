@@ -55,10 +55,10 @@ ph:SetText("search...")
 ph:Show()
 
 local function UpdatePlaceholder()
-    if searchText == "" then 
-        ph:Show() 
-    else 
-        ph:Hide() 
+    if searchText == "" then
+        ph:Show()
+    else
+        ph:Hide()
     end
 end
 
@@ -76,8 +76,8 @@ search:SetScript("OnTextChanged", function(self)
     searchText = (self:GetText() or ""):lower()
     UpdatePlaceholder()
     searchIdle = 0
-    if SmoeBag.MarkDirtyAll then 
-        SmoeBag.MarkDirtyAll() 
+    if SmoeBag.MarkDirtyAll then
+        SmoeBag.MarkDirtyAll()
     end
 end)
 
@@ -103,11 +103,11 @@ end
 
 function SmoeBag.UpdateSearchFocus(dt)
     if not searchFocused then return end
-    
+
     if (search:GetText() or "") == "" then
         searchIdle = searchIdle + dt
-        if searchIdle > SEARCH_IDLE_UNFOCUS then 
-            search:ClearFocus() 
+        if searchIdle > SEARCH_IDLE_UNFOCUS then
+            search:ClearFocus()
         end
     else
         searchIdle = 0
@@ -119,10 +119,10 @@ function SmoeBag.HandleSearchClick()
     local rDown = IsMouseButtonDown and IsMouseButtonDown("RightButton") or false
     local lPressed = lDown and (not prevLDown)
     local rPressed = rDown and (not prevRDown)
-    
+
     if searchFocused and (lPressed or rPressed) then
-        if not MouseIsOver(SmoeBag.frame) then 
-            search:ClearFocus() 
+        if not MouseIsOver(SmoeBag.frame) then
+            search:ClearFocus()
         end
     end
     prevLDown, prevRDown = lDown, rDown
@@ -135,17 +135,20 @@ function SmoeBag.UpdateHeaderLayout()
     if fw <= 0 then return end
 
     local avail = fw - (HEADER_LEFT_PAD + HEADER_MIN_TITLE_SPACE) - HEADER_RIGHT_PAD
-    avail = avail - ((SmoeBag.CLEAN_W or 52) + HEADER_BTN_GAP)
-    local w = SmoeBag.Clamp(avail, SEARCH_MIN_W, SEARCH_MAX_W)
-    if w < SEARCH_MIN_W then 
-        SmoeBag.cleanBtn:Hide() 
-    else 
-        SmoeBag.cleanBtn:Show() 
+    local buttonWidth = (SmoeBag.CLEAN_W or 52) + HEADER_BTN_GAP
+    if avail >= SEARCH_MIN_W + buttonWidth then
+        SmoeBag.cleanBtn:Show()
+        avail = avail - buttonWidth
+    else
+        SmoeBag.cleanBtn:Hide()
     end
 
-    if w < SEARCH_W then 
-        w = math.max(w, SEARCH_MIN_W) 
+    if avail < SEARCH_MIN_W then
+        search:Hide()
+        return
     end
+    search:Show()
+    local w = SmoeBag.Clamp(avail, SEARCH_MIN_W, SEARCH_MAX_W)
 
     search:SetWidth(w)
     search:ClearAllPoints()

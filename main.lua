@@ -15,12 +15,12 @@ local dirtyAll = false
 local dirtyBags = {}
 local timer = 0
 
-function SmoeBag.MarkDirtyAll() 
-    dirtyAll = true 
+function SmoeBag.MarkDirtyAll()
+    dirtyAll = true
 end
 
-function SmoeBag.MarkDirtyBag(bag) 
-    dirtyBags[bag] = true 
+function SmoeBag.MarkDirtyBag(bag)
+    dirtyBags[bag] = true
 end
 
 SmoeBag.frame:SetScript("OnUpdate", function(_, dt)
@@ -69,8 +69,17 @@ SmoeBag.frame:SetScript("OnUpdate", function(_, dt)
 end)
 
 SLASH_SMOEBAG1 = "/smoebag"
-SlashCmdList["SMOEBAG"] = function()
-    SmoeBag.Toggle()
+SlashCmdList["SMOEBAG"] = function(message)
+    local command = (message or ""):match("^%s*(.-)%s*$"):lower()
+    if command == "config" then
+        SmoeBag.OpenConfig()
+    elseif command == "sort" then
+        SmoeBag.CleanStart()
+    elseif command == "" then
+        SmoeBag.Toggle()
+    else
+        SmoeBag.Print("Usage: /smoebag [config|sort]")
+    end
 end
 
 SLASH_SMOEBAGCLEAN1 = "/smoebagclean"

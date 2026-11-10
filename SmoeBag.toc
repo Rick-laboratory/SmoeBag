@@ -1,6 +1,6 @@
 ## Interface: 50503, 11508, 20505, 120001
 ## Title: SmoeBag
-## Notes: One Bag Addon similar to Bagnone but Developed by myself
+## Notes: Unified inventory with search, adjustable layout and stack sorting.
 ## Author: Rick Armbruster aka Smoebody
 ## Version: 0.62
 ## SavedVariables: SmoeBagDB

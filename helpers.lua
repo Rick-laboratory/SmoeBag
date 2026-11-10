@@ -9,8 +9,8 @@ SmoeBag = SmoeBag or {}
 
 function SmoeBag.Print(...)
     local t = {}
-    for i = 1, select("#", ...) do 
-        t[#t + 1] = tostring(select(i, ...)) 
+    for i = 1, select("#", ...) do
+        t[#t + 1] = tostring(select(i, ...))
     end
     print("|cffffcc00SmoeBag|r", table.concat(t, " "))
 end
@@ -18,22 +18,22 @@ end
 -- API wrappers for compatibility
 -- --- Container API (C_Container vs classic) ---
 function SmoeBag.GetNumSlots(bag)
-    if C_Container then 
-        return C_Container.GetContainerNumSlots(bag) or 0 
+    if C_Container and C_Container.GetContainerNumSlots then
+        return C_Container.GetContainerNumSlots(bag) or 0
     end
     return GetContainerNumSlots(bag) or 0
 end
 
 function SmoeBag.PickupSlot(bag, slot)
-    if C_Container then 
-        C_Container.PickupContainerItem(bag, slot) 
-    else 
-        PickupContainerItem(bag, slot) 
+    if C_Container and C_Container.PickupContainerItem then
+        C_Container.PickupContainerItem(bag, slot)
+    else
+        PickupContainerItem(bag, slot)
     end
 end
 
 function SmoeBag.UseSlot(bag, slot)
-    if C_Container then
+    if C_Container and C_Container.UseContainerItem then
         C_Container.UseContainerItem(bag, slot)
     else
         UseContainerItem(bag, slot)
@@ -41,19 +41,19 @@ function SmoeBag.UseSlot(bag, slot)
 end
 
 function SmoeBag.GetItemLinkSafe(bag, slot)
-    if C_Container then 
-        return C_Container.GetContainerItemLink(bag, slot) 
+    if C_Container and C_Container.GetContainerItemLink then
+        return C_Container.GetContainerItemLink(bag, slot)
     end
     return GetContainerItemLink(bag, slot)
 end
 
 function SmoeBag.GetItemInfoSafe(bag, slot)
-    if C_Container then 
-        return C_Container.GetContainerItemInfo(bag, slot) 
+    if C_Container and C_Container.GetContainerItemInfo then
+        return C_Container.GetContainerItemInfo(bag, slot)
     end
     local texture, count, _, _, _, _, link = GetContainerItemInfo(bag, slot)
-    if texture then 
-        return { iconFileID = texture, stackCount = count, hyperlink = link } 
+    if texture then
+        return { iconFileID = texture, stackCount = count, hyperlink = link }
     end
 end
 
@@ -70,6 +70,14 @@ function SmoeBag.IsEquippableLink(link)
     end
     local _, _, _, _, _, _, _, _, equipLoc = GetItemInfo(link)
     return equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_BAG" or false
+end
+
+-- Split stacks through whichever container API this client supplies.
+function SmoeBag.SplitSlot(bag, slot, amount)
+    local split = C_Container and C_Container.SplitContainerItem or SplitContainerItem
+    if not split then return false end
+    split(bag, slot, amount)
+    return true
 end
 
 -- --- Tooltip ---
@@ -161,7 +169,7 @@ function SmoeBag.GetBagFamilySafe(bag)
 end
 
 function SmoeBag.FamilyToColor(family)
-    if not family or family == 0 then 
+    if not family or family == 0 then
         return SmoeBag.BORDER_NORMAL or { 0.10, 0.10, 0.10, 0.0 }
     end
     if not SmoeBag.FAMILY_COLORS then
@@ -170,16 +178,16 @@ function SmoeBag.FamilyToColor(family)
     if bit and bit.band then
         for i = 1, #SmoeBag.FAMILY_COLORS do
             local e = SmoeBag.FAMILY_COLORS[i]
-            if bit.band(family, e.mask) ~= 0 then 
-                return e.col 
+            if bit.band(family, e.mask) ~= 0 then
+                return e.col
             end
         end
         return SmoeBag.BORDER_NORMAL or { 0.10, 0.10, 0.10, 0.0 }
     end
     for i = 1, #SmoeBag.FAMILY_COLORS do
         local e = SmoeBag.FAMILY_COLORS[i]
-        if family == e.mask then 
-            return e.col 
+        if family == e.mask then
+            return e.col
         end
     end
     return SmoeBag.BORDER_NORMAL or { 0.10, 0.10, 0.10, 0.0 }
